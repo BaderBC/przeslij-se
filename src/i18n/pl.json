@@ -1,0 +1,43 @@
+{
+  "app": {
+    "subtitle": "Bez serwera. Bez konta. Bezpośredni transfer.",
+    "sendInstead": "Chcę wysłać plik",
+    "backToReceive": "Wróć"
+  },
+  "receiver": {
+    "initializing": "Przygotowuję...",
+    "headline": "Gotowy do odbioru",
+    "hint": "Podziel się swoim kodem z osobą, która chce Ci przesłać plik",
+    "yourCode": "Twój kod",
+    "waiting": "Czekam na połączenie...",
+    "incomingFile": "Ktoś chce Ci przesłać",
+    "accept": "Akceptuj",
+    "reject": "Odrzuć",
+    "receiving": "Odbieranie",
+    "done": "Gotowe!",
+    "downloadStarted": "Plik został zapisany w folderze pobierania.",
+    "receiveAnother": "Odbierz kolejny plik"
+  },
+  "sender": {
+    "headline": "Wyślij plik",
+    "dropFile": "Upuść plik tutaj",
+    "orClick": "lub kliknij, aby wybrać",
+    "changeFile": "Zmień plik",
+    "enterCode": "Kod odbiorcy",
+    "codePlaceholder": "ABC123",
+    "scanQR": "Zeskanuj kod QR",
+    "scannerLabel": "Skieruj kamerę na kod QR odbiorcy",
+    "connecting": "Łączenie...",
+    "connected": "Połączono",
+    "send": "Wyślij",
+    "waitingAccept": "Czekam na akceptację...",
+    "sending": "Wysyłanie",
+    "done": "Plik wysłany!",
+    "rejected": "Odbiorca odrzucił transfer.",
+    "sendAnother": "Wyślij kolejny plik",
+    "codeError": "Nie można się połączyć. Sprawdź kod i spróbuj ponownie."
+  },
+  "errors": {
+    "peerError": "Coś poszło nie tak. Odśwież stronę i spróbuj ponownie."
+  }
+}

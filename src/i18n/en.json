@@ -1,0 +1,43 @@
+{
+  "app": {
+    "subtitle": "No server. No account. Just a direct transfer.",
+    "sendInstead": "I want to send a file",
+    "backToReceive": "Back"
+  },
+  "receiver": {
+    "initializing": "Getting things ready...",
+    "headline": "Ready to receive",
+    "hint": "Share your code with whoever is sending you a file",
+    "yourCode": "Your sharing code",
+    "waiting": "Waiting for a connection...",
+    "incomingFile": "Someone wants to send you",
+    "accept": "Accept",
+    "reject": "Decline",
+    "receiving": "Receiving",
+    "done": "Got it!",
+    "downloadStarted": "The file has been saved to your downloads.",
+    "receiveAnother": "Receive another file"
+  },
+  "sender": {
+    "headline": "Send a file",
+    "dropFile": "Drop your file here",
+    "orClick": "or click to browse",
+    "changeFile": "Change file",
+    "enterCode": "Receiver's code",
+    "codePlaceholder": "ABC123",
+    "scanQR": "Scan QR code instead",
+    "scannerLabel": "Point camera at receiver's QR code",
+    "connecting": "Connecting...",
+    "connected": "Connected",
+    "send": "Send",
+    "waitingAccept": "Waiting for them to accept...",
+    "sending": "Sending",
+    "done": "File sent!",
+    "rejected": "They declined the transfer.",
+    "sendAnother": "Send another file",
+    "codeError": "Couldn't connect. Double-check the code and try again."
+  },
+  "errors": {
+    "peerError": "Something went wrong. Refresh the page and try again."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "przeslij-se",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "pnpm run build && wrangler dev",
+    "deploy": "pnpm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^12.6.13",
+    "@astrojs/react": "^4.1.0",
+    "@tailwindcss/vite": "^4.1.3",
+    "astro": "^5.6.1",
+    "html5-qrcode": "^2.3.8",
+    "i18next": "^23.16.8",
+    "i18next-browser-languagedetector": "^8.0.5",
+    "peerjs": "^1.5.4",
+    "qrcode.react": "^3.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^15.4.1",
+    "tailwindcss": "^4.1.3"
+  },
+  "devDependencies": {
+    "wrangler": "^4.82.2"
+  }
+}
