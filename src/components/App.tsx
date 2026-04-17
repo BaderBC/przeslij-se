@@ -1,12 +1,14 @@
-import '../i18n/index.js';
+import '../i18n/index';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import ReceiverView from './ReceiverView.jsx';
-import SenderView from './SenderView.jsx';
+import ReceiverView from './ReceiverView';
+import SenderView from './SenderView';
+
+type Mode = 'receive' | 'send';
 
 export default function App() {
   const { i18n } = useTranslation();
-  const [mode, setMode] = useState('receive');
+  const [mode, setMode] = useState<Mode>('receive');
   const [prefilledCode, setPrefilledCode] = useState('');
 
   useEffect(() => {

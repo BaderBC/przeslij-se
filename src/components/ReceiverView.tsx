@@ -1,26 +1,50 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import type { Peer as PeerInstance, DataConnection } from 'peerjs';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
-import { generateCode, formatSize } from '../utils/format.js';
+import { generateCode, formatSize } from '../utils/format';
 
 const CHUNK_SIZE = 65536; // 64 KB
 
-export default function ReceiverView({ onSendInstead }) {
+type ViewState = 'waiting' | 'pending' | 'receiving' | 'done';
+
+interface OfferMessage {
+  type: 'offer';
+  name: string;
+  size: number;
+  mimeType: string;
+}
+
+interface DoneMessage {
+  type: 'done';
+}
+
+type IncomingMessage = OfferMessage | DoneMessage;
+
+interface ReceiverViewProps {
+  onSendInstead: () => void;
+}
+
+interface IconProps {
+  className?: string;
+}
+
+export default function ReceiverView({ onSendInstead }: ReceiverViewProps) {
   const { t } = useTranslation();
   const [code, setCode] = useState('');
   const [peerReady, setPeerReady] = useState(false);
   const [peerError, setPeerError] = useState(false);
-  const [viewState, setViewState] = useState('waiting'); // waiting | pending | receiving | done
-  const [offer, setOffer] = useState(null);
+  const [viewState, setViewState] = useState<ViewState>('waiting'); // waiting | pending | receiving | done
+  const [offer, setOffer] = useState<OfferMessage | null>(null);
   const [progress, setProgress] = useState(0);
 
-  const peerRef = useRef(null);
-  const connRef = useRef(null);
-  const offerRef = useRef(null);
-  const chunksRef = useRef([]);
+  const peerRef = useRef<PeerInstance | null>(null);
+  const connRef = useRef<DataConnection | null>(null);
+  const offerRef = useRef<OfferMessage | null>(null);
+  const chunksRef = useRef<ArrayBuffer[]>([]);
   const receivedRef = useRef(0);
 
-  const initPeer = useCallback(async (peerCode) => {
+  const initPeer = useCallback(async (peerCode: string) => {
     const { Peer } = await import('peerjs');
     const peer = new Peer(peerCode);
     peerRef.current = peer;
@@ -38,11 +62,11 @@ export default function ReceiverView({ onSendInstead }) {
       }
     });
 
-    peer.on('connection', (conn) => {
+    peer.on('connection', (conn: DataConnection) => {
       connRef.current = conn;
-      conn.on('data', (data) => {
+      conn.on('data', (data: unknown) => {
         if (typeof data === 'string') {
-          const msg = JSON.parse(data);
+          const msg = JSON.parse(data) as IncomingMessage;
           if (msg.type === 'offer') {
             offerRef.current = msg;
             setOffer(msg);
@@ -65,7 +89,7 @@ export default function ReceiverView({ onSendInstead }) {
         } else {
           // PeerJS may deliver binary data as ArrayBuffer, Uint8Array, Buffer, or Blob
           // depending on the browser and serialization. Normalise to ArrayBuffer.
-          let buf;
+          let buf: ArrayBuffer | undefined;
           if (data instanceof ArrayBuffer) {
             buf = data;
           } else if (ArrayBuffer.isView(data)) {
@@ -258,7 +282,7 @@ function Spinner() {
   );
 }
 
-function ProgressBar({ value }) {
+function ProgressBar({ value }: { value: number }) {
   return (
     <div className="w-full bg-slate-100 rounded-full h-1.5">
       <div
@@ -269,7 +293,7 @@ function ProgressBar({ value }) {
   );
 }
 
-function CheckIcon({ className }) {
+function CheckIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 6L9 17l-5-5" />
@@ -277,7 +301,7 @@ function CheckIcon({ className }) {
   );
 }
 
-function FileIcon({ className }) {
+function FileIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />

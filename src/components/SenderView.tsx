@@ -1,25 +1,42 @@
 import { useState, useEffect, useRef } from 'react';
+import type { Peer as PeerInstance, DataConnection } from 'peerjs';
 import { useTranslation } from 'react-i18next';
-import { formatSize } from '../utils/format.js';
+import { formatSize } from '../utils/format';
 
 const CHUNK_SIZE = 65536; // 64 KB
 
-export default function SenderView({ prefilledCode = '', onBack }) {
+type ViewState = 'idle' | 'connecting' | 'ready' | 'waiting' | 'sending' | 'done' | 'rejected' | 'error';
+
+interface SenderViewProps {
+  prefilledCode?: string;
+  onBack: () => void;
+}
+
+interface IconProps {
+  className?: string;
+}
+
+interface QRScannerProps {
+  onScan: (code: string) => void;
+  label: string;
+}
+
+export default function SenderView({ prefilledCode = '', onBack }: SenderViewProps) {
   const { t } = useTranslation();
   const [code, setCode] = useState(prefilledCode.toUpperCase());
-  const [file, setFile] = useState(null);
-  const [viewState, setViewState] = useState('idle'); // idle | connecting | ready | waiting | sending | done | rejected | error
+  const [file, setFile] = useState<File | null>(null);
+  const [viewState, setViewState] = useState<ViewState>('idle'); // idle | connecting | ready | waiting | sending | done | rejected | error
   const [progress, setProgress] = useState(0);
   const [dragOver, setDragOver] = useState(false);
   const [showScanner, setShowScanner] = useState(true);
 
-  const peerRef = useRef(null);
-  const connRef = useRef(null);
-  const fileRef = useRef(null);
-  const viewStateRef = useRef('idle');
-  const fileInputRef = useRef(null);
+  const peerRef = useRef<PeerInstance | null>(null);
+  const connRef = useRef<DataConnection | null>(null);
+  const fileRef = useRef<File | null>(null);
+  const viewStateRef = useRef<ViewState>('idle');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const updateState = (s) => {
+  const updateState = (s: ViewState) => {
     viewStateRef.current = s;
     setViewState(s);
   };
@@ -29,19 +46,19 @@ export default function SenderView({ prefilledCode = '', onBack }) {
     return () => peerRef.current?.destroy();
   }, []); // eslint-disable-line
 
-  const getOrCreatePeer = async () => {
+  const getOrCreatePeer = async (): Promise<PeerInstance> => {
     if (peerRef.current) return peerRef.current;
     const { Peer } = await import('peerjs');
     const peer = new Peer();
     peerRef.current = peer;
-    await new Promise((resolve, reject) => {
-      peer.on('open', resolve);
+    await new Promise<void>((resolve, reject) => {
+      peer.on('open', () => resolve());
       peer.on('error', reject);
     });
     return peer;
   };
 
-  const connect = async (targetCode) => {
+  const connect = async (targetCode: string) => {
     if (!targetCode || targetCode.length !== 6) return;
     updateState('connecting');
 
@@ -59,8 +76,8 @@ export default function SenderView({ prefilledCode = '', onBack }) {
         updateState('ready');
       });
 
-      conn.on('data', (data) => {
-        const msg = JSON.parse(data);
+      conn.on('data', (data: unknown) => {
+        const msg = JSON.parse(data as string) as { type: string };
         if (msg.type === 'accept') sendChunks(conn);
         else if (msg.type === 'reject') updateState('rejected');
       });
@@ -78,7 +95,7 @@ export default function SenderView({ prefilledCode = '', onBack }) {
     }
   };
 
-  const handleCodeChange = (e) => {
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     setCode(val);
     if (val.length === 6 && (viewStateRef.current === 'idle' || viewStateRef.current === 'error')) {
@@ -87,19 +104,19 @@ export default function SenderView({ prefilledCode = '', onBack }) {
     }
   };
 
-  const handleFile = (f) => {
+  const handleFile = (f: File) => {
     setFile(f);
     fileRef.current = f;
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOver(false);
     const f = e.dataTransfer.files[0];
     if (f) handleFile(f);
   };
 
-  const handleScan = (scannedCode) => {
+  const handleScan = (scannedCode: string) => {
     setCode(scannedCode);
     setShowScanner(false);
     connect(scannedCode);
@@ -119,7 +136,7 @@ export default function SenderView({ prefilledCode = '', onBack }) {
     updateState('waiting');
   };
 
-  const sendChunks = (conn) => {
+  const sendChunks = (conn: DataConnection) => {
     const f = fileRef.current;
     if (!f) return;
     updateState('sending');
@@ -133,8 +150,9 @@ export default function SenderView({ prefilledCode = '', onBack }) {
       }
       const slice = f.slice(offset, offset + CHUNK_SIZE);
       const reader = new FileReader();
-      reader.onload = (e) => {
-        conn.send(e.target.result);
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (!e.target?.result) return;
+        conn.send(e.target.result as ArrayBuffer);
         offset += CHUNK_SIZE;
         setProgress(Math.min(100, Math.round((offset / f.size) * 100)));
         next();
@@ -324,8 +342,8 @@ export default function SenderView({ prefilledCode = '', onBack }) {
   );
 }
 
-function QRScanner({ onScan, label }) {
-  const scannerRef = useRef(null);
+function QRScanner({ onScan, label }: QRScannerProps) {
+  const scannerRef = useRef<{ stop: () => Promise<void> } | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -337,7 +355,7 @@ function QRScanner({ onScan, label }) {
         .start(
           { facingMode: 'environment' },
           { fps: 10, qrbox: { width: 200, height: 200 } },
-          (text) => {
+          (text: string) => {
             scanner.stop().then(() => {
               try {
                 const url = new URL(text);
@@ -371,7 +389,7 @@ function SmallSpinner() {
   );
 }
 
-function ProgressBar({ value }) {
+function ProgressBar({ value }: { value: number }) {
   return (
     <div className="w-full bg-slate-100 rounded-full h-1.5">
       <div
@@ -382,7 +400,7 @@ function ProgressBar({ value }) {
   );
 }
 
-function CheckIcon({ className }) {
+function CheckIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 6L9 17l-5-5" />
@@ -390,7 +408,7 @@ function CheckIcon({ className }) {
   );
 }
 
-function XIcon({ className }) {
+function XIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 6L6 18M6 6l12 12" />
@@ -398,7 +416,7 @@ function XIcon({ className }) {
   );
 }
 
-function FileIcon({ className }) {
+function FileIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -407,7 +425,7 @@ function FileIcon({ className }) {
   );
 }
 
-function UploadIcon({ className }) {
+function UploadIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="16 16 12 12 8 16" />
